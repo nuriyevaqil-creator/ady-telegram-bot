@@ -8,11 +8,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "ADY Bilet Monitorinq Botu Aktivdir!"
-
-def run_web_server():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    return "ADY Bilet Monitorinq Botu Aktivdir!", 200
 
 BOT_TOKEN = "8203977390:AAGX4V3sdaDE_OQRQ8njTuI-M5UwcG1qqKU"
 CHANNEL_ID = "@tezBiletTap"
@@ -102,7 +98,7 @@ def bot_loop():
     while True:
         try:
             check_and_send_schedule()
-            time.sleep(120)  # Yoxlamanı 2 dəqiqədən bir edirik (120 saniyə)
+            time.sleep(120)
         except Exception as main_error:
             print(f"Loop xətası: {main_error}")
             time.sleep(30)
@@ -112,4 +108,5 @@ if __name__ == "__main__":
     t.daemon = True
     t.start()
     
-    run_web_server()
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
