@@ -1,12 +1,23 @@
-import requests
+import os
 import time
+import threading
+import requests
+from flask import Flask
 
-# --- SİZİN MƏLUMATLARINIZ ---
+# --- WEB SERVER (Render-in sönməməsi üçün) ---
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "ADY Bilet Monitorinq Botu Aktivdir!"
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+# --- TELEGRAM VƏ MONITORİNQ BOTU ---
 BOT_TOKEN = "8203977390:AAGX4V3sdaDE_OQRQ8njTuI-M5UwcG1qqKU"
 CHANNEL_ID = "@tezBiletTap"
-
-# Göndərilmiş mesajları təkrar göndərməmək üçün yaddaş
-seen_trips = set()
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -33,30 +44,33 @@ def check_baku_tbilisi_route():
 
     try:
         response = requests.get(url, headers=headers, timeout=10)
-        
         if response.status_code == 200:
-            data = response.json()
-            # Məlumat bazasından Bakı-Tiflis istiqamətini süzgəcdən keçiririk
             print("Bakı - Tiflis reysləri uğurla yoxlanıldı.")
-            
         else:
             print(f"ADY sisteminə qoşulmaq olmadı. Status: {response.status_code}")
-            
     except Exception as e:
         print(f"Məlumat çəkərkən xəta yarandı: {e}")
 
-print("Bakı - Tiflis Bilet Monitorinq Botu işə düşdü...")
+def bot_loop():
+    time.sleep(5)  # Serverin tam işə düşməsini gözləyirik
+    send_telegram_message(
+        "<b>🚆 Bakı ⇆ Tiflis Reys Monitorinqi Aktivdir!</b>\n\n"
+        "Bu kanalda Bakı – Tiflis istiqamətində açılan yeni bilet satışı və reyslər haqqında anlıq bildirişlər paylaşılacaq."
+    )
+    
+    while True:
+        try:
+            check_baku_tbilisi_route()
+            time.sleep(600)  # Hər 10 dəqiqədən bir yoxlayır
+        except Exception as main_error:
+            print(f"Ümumi xəta: {main_error}")
+            time.sleep(60)
 
-# İşə düşmə haqqında kanala bildiriş
-send_telegram_message(
-    "🚆 Bakı ⇆ Tiflis Reys Monitorinqi Aktivdir!\n\n"
-    "Bu kanalda Bakı – Tiflis istiqamətində açılan yeni bilet satışı və reyslər haqqında anlıq bildirişlər paylaşılacaq."
-)
-
-while True:
-    try:
-        check_baku_tbilisi_route()
-        time.sleep(600)  # Hər 10 dəqiqədən bir yoxlayır
-    except Exception as main_error:
-        print(f"Ümumi xəta: {main_error}")
-        time.sleep(60)
+if __name__ == "__main__":
+    # Botu arxa fonda işə salırıq
+    t = threading.Thread(target=bot_loop)
+    t.daemon = True
+    t.start()
+    
+    # Web serveri işə salırıq ki Render portu görsün
+    run_web_server()
