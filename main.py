@@ -20,26 +20,16 @@ def send_telegram_message(text):
         print(f"Telegram xətası: {e}")
 
 def check_and_send_schedule():
-    url = "https://ticket.ady.az/api/v1/routes"
-    
-    # Cloudflare/403 bloklamasını keçmək üçün tam Brauzer başlıqları (Headers)
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "az,az-AZ;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Referer": "https://ticket.ady.az/",
-        "Origin": "https://ticket.ady.az",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin"
-    }
+    # Cloudflare/IP bloku keçmək üçün proxy istifadə edirik
+    url = "https://api.allorigins.win/get?url=" + requests.utils.quote("https://ticket.ady.az/api/v1/routes")
 
     try:
-        session = requests.Session()
-        response = session.get(url, headers=headers, timeout=15)
+        response = requests.get(url, timeout=15)
         
         if response.status_code == 200:
-            data = response.json()
+            wrapper_data = response.json()
+            import json
+            data = json.loads(wrapper_data.get("contents", "{}"))
             routes = data.get("data", []) if isinstance(data, dict) else []
             
             baku_tbilisi_list = []
