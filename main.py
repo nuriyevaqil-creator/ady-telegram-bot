@@ -5,8 +5,6 @@ import requests
 BOT_TOKEN = "8203977390:AAGX4V3sdaDE_OQRQ8njTuI-M5UwcG1qqKU"
 CHANNEL_ID = "@tezBiletTap"
 
-last_sent_message = ""
-
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
@@ -22,8 +20,6 @@ def send_telegram_message(text):
         print(f"Telegram xətası: {e}")
 
 def check_and_send_schedule():
-    global last_sent_message
-    
     url = "https://ticket.ady.az/api/v1/routes"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
@@ -53,13 +49,13 @@ def check_and_send_schedule():
                     if available_seats > 0:
                         tbilisi_baku_list.append(f"📅 {date_str} — <b>{price} AZN</b>")
 
-            msg_lines = ["<b>🎫 ADY Biletləri</b>\n"]
+            msg_lines = ["<b>🎫 ADY Biletləri (Test Mesajı)</b>\n"]
 
             msg_lines.append("🚂 <b>Tbilisi ➔ Bakı:</b>")
             if tbilisi_baku_list:
                 msg_lines.extend(tbilisi_baku_list)
             else:
-                msg_lines.append("— hazırda bilet yoхdur")
+                msg_lines.append("— hazırda bilet yoxdur")
 
             msg_lines.append("")
 
@@ -67,18 +63,15 @@ def check_and_send_schedule():
             if baku_tbilisi_list:
                 msg_lines.extend(baku_tbilisi_list)
             else:
-                msg_lines.append("— hazırda bilet yoхdur")
+                msg_lines.append("— hazırda bilet yoxdur")
 
             msg_lines.append("\n👉 <a href='https://ticket.ady.az'>ticket.ady.az</a>")
 
             full_message = "\n".join(msg_lines)
 
-            if full_message != last_sent_message:
-                send_telegram_message(full_message)
-                last_sent_message = full_message
-                print("Siyahı kanala atıldı.")
-            else:
-                print("Dəyişiklik yoxdur.")
+            # TEST ƏMRİ: Dəyişiklik olub-olmamasına baxmadan mesajı birbaşa kanala atır!
+            res = send_telegram_message(full_message)
+            print("Test mesajı kanala atıldı:", res)
 
         else:
             print(f"API xətası: {response.status_code}")
@@ -90,7 +83,7 @@ if __name__ == "__main__":
     while True:
         try:
             check_and_send_schedule()
-            time.sleep(90)  # Hər 90 saniyədən bir yoxlayır
+            time.sleep(90)  # Hər 90 saniyədən bir yoxlayacaq
         except Exception as main_error:
             print(f"Loop xətası: {main_error}")
             time.sleep(30)
