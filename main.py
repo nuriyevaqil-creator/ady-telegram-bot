@@ -1,14 +1,6 @@
 import os
 import time
-import threading
 import requests
-from flask import Flask
-
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "ADY Bilet Monitorinq Botu Aktivdir!", 200
 
 BOT_TOKEN = "8203977390:AAGX4V3sdaDE_OQRQ8njTuI-M5UwcG1qqKU"
 CHANNEL_ID = "@tezBiletTap"
@@ -93,20 +85,12 @@ def check_and_send_schedule():
     except Exception as e:
         print(f"Xəta: {e}")
 
-def bot_loop():
-    time.sleep(5)
+if __name__ == "__main__":
+    print("Bot işə düşdü...")
     while True:
         try:
             check_and_send_schedule()
-            time.sleep(120)
+            time.sleep(90)  # Hər 90 saniyədən bir yoxlayır
         except Exception as main_error:
             print(f"Loop xətası: {main_error}")
             time.sleep(30)
-
-if __name__ == "__main__":
-    t = threading.Thread(target=bot_loop)
-    t.daemon = True
-    t.start()
-    
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
