@@ -21,12 +21,23 @@ def send_telegram_message(text):
 
 def check_and_send_schedule():
     url = "https://ticket.ady.az/api/v1/routes"
+    
+    # Cloudflare/403 bloklamasını keçmək üçün tam Brauzer başlıqları (Headers)
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "az,az-AZ;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Referer": "https://ticket.ady.az/",
+        "Origin": "https://ticket.ady.az",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin"
     }
 
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        session = requests.Session()
+        response = session.get(url, headers=headers, timeout=15)
+        
         if response.status_code == 200:
             data = response.json()
             routes = data.get("data", []) if isinstance(data, dict) else []
@@ -69,9 +80,8 @@ def check_and_send_schedule():
 
             full_message = "\n".join(msg_lines)
 
-            # TEST ƏMRİ: Dəyişiklik olub-olmamasına baxmadan mesajı birbaşa kanala atır!
             res = send_telegram_message(full_message)
-            print("Test mesajı kanala atıldı:", res)
+            print("Siyahı kanala atıldı:", res)
 
         else:
             print(f"API xətası: {response.status_code}")
@@ -83,7 +93,7 @@ if __name__ == "__main__":
     while True:
         try:
             check_and_send_schedule()
-            time.sleep(90)  # Hər 90 saniyədən bir yoxlayacaq
+            time.sleep(90)
         except Exception as main_error:
             print(f"Loop xətası: {main_error}")
             time.sleep(30)
